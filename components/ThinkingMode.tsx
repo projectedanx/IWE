@@ -50,9 +50,9 @@ async function runAnalyst(bundle: WordBundle): Promise<AnalystOutput> {
       input: prompt,
       response_format: { type: 'json_schema', json_schema: analystOpenAiSchema },
     });
-    const payload = response.output_text;
-    if (!payload) throw new Error('OpenAI returned an empty response.');
-    return normalize(JSON.parse(payload));
+    const jsonPayload = response.output?.[0]?.content?.find((part: any) => 'json' in part)?.json;
+    if (!jsonPayload) throw new Error('OpenAI returned an empty response.');
+    return normalize(jsonPayload);
   }
 
   const ai = new GoogleGenAI({ apiKey: env.geminiApiKey! });
