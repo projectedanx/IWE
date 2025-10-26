@@ -1,5 +1,5 @@
 
-export type SourceTag = 'dictionaryapi' | 'datamuse' | 'conceptnet' | 'wikipedia' | 'gemini' | 'rule';
+export type SourceTag = 'dictionaryapi' | 'datamuse' | 'conceptnet' | 'wikipedia' | 'gemini' | 'openai' | 'rule';
 
 export interface SourceAttribution {
   source: SourceTag;

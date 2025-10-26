@@ -7,6 +7,7 @@ const LABELS: Record<SourceTag, string> = {
   conceptnet: 'ConceptNet',
   wikipedia: 'Wikipedia',
   gemini: 'Gemini (AI)',
+  openai: 'OpenAI (AI)',
   rule: 'Heuristic Rule',
 };
 
@@ -16,6 +17,7 @@ const TONE: Record<SourceTag, string> = {
   conceptnet: 'bg-sky-100 text-sky-700',
   wikipedia: 'bg-indigo-100 text-indigo-700',
   gemini: 'bg-purple-100 text-purple-700',
+  openai: 'bg-rose-100 text-rose-700',
   rule: 'bg-amber-100 text-amber-700',
 };
 
@@ -25,6 +27,7 @@ const KIND: Record<SourceTag, 'sourced' | 'ai'> = {
   conceptnet: 'sourced',
   wikipedia: 'sourced',
   gemini: 'ai',
+  openai: 'ai',
   rule: 'ai',
 };
 

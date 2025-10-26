@@ -1,7 +1,8 @@
 
 import type { InfluenceScore, WordBundle } from '../types';
 import { GoogleGenAI } from "@google/genai";
-import { assertGeminiKey, env } from '../lib/env';
+import OpenAI from 'openai';
+import { assertAiKey, env } from '../lib/env';
 
 const DATAMUSE_URL = env.datamuseApiUrl;
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
@@ -28,11 +29,23 @@ function getIntensityHeuristic(word: string): number {
   return clamp01(score);
 }
 
-async function getPolarityFromGemini(word: string, definitions: string[]): Promise<number> {
+async function getPolarityFromAi(word: string, definitions: string[]): Promise<number> {
   try {
-    assertGeminiKey('Influence polarity analysis');
-    const ai = new GoogleGenAI({ apiKey: env.geminiApiKey! });
+    assertAiKey('Influence polarity analysis');
     const prompt = `Analyze the sentiment polarity of the English word "${word}". Definitions: "${definitions.join('; ')}". Respond with ONLY a single number from -1.0 (very negative) to 1.0 (very positive).`;
+
+    if (env.aiProvider === 'openai') {
+      const ai = new OpenAI({ apiKey: env.openAiApiKey!, dangerouslyAllowBrowser: true });
+      const response = await ai.responses.create({
+        model: env.openAiModel,
+        input: prompt,
+      });
+      const text = response.output_text?.trim() ?? '';
+      const num = parseFloat(text);
+      return isNaN(num) ? 0 : Math.max(-1, Math.min(1, num));
+    }
+
+    const ai = new GoogleGenAI({ apiKey: env.geminiApiKey! });
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: prompt,
@@ -41,7 +54,7 @@ async function getPolarityFromGemini(word: string, definitions: string[]): Promi
     const num = parseFloat(text);
     return isNaN(num) ? 0 : Math.max(-1, Math.min(1, num));
   } catch (e) {
-    console.error("Gemini polarity fetch failed", e);
+    console.error("AI polarity fetch failed", e);
     return 0;
   }
 }
@@ -51,7 +64,7 @@ export async function computeInfluence(bundle: WordBundle): Promise<InfluenceSco
 
   const [frequency, polarity] = await Promise.all([
     getDatamuseFrequency(bundle.query),
-    getPolarityFromGemini(bundle.query, bundle.definitions.map(d => d.text))
+    getPolarityFromAi(bundle.query, bundle.definitions.map(d => d.text))
   ]);
 
   const intensity = getIntensityHeuristic(bundle.query);

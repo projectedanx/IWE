@@ -13,7 +13,7 @@
 - **Adapter Pattern:** Each external API integration belongs in `src/adapters`, normalizing output into shared types defined in `src/types`.
 - **Orchestrator Service:** `src/services/orchestrator.ts` coordinates adapter calls via `Promise.allSettled`, aggregating data into a unified `WordBundle`.
 - **Client Storage:** IndexedDB will persist long-lived history, while session storage will cache transient results.
-- **AI Integration:** All Gemini interactions should flow through `@google/genai`, following the guardrails documented in [`AGENTS.md`](./AGENTS.md).
+- **AI Integration:** Gemini via `@google/genai` is the default, and an OpenAI pathway is available when `VITE_AI_PROVIDER=openai`, all following the guardrails documented in [`AGENTS.md`](./AGENTS.md).
 
 ## Getting Started
 1. **Install dependencies**
@@ -21,7 +21,7 @@
    npm install
    ```
 2. **Configure environment variables**
-   - Duplicate `.env.example` (or create `.env.local`) and set the values described below. At minimum you will want `VITE_GEMINI_API_KEY` for Gemini-powered features.
+   - Duplicate `.env.example` (or create `.env.local`) and set the values described below. Gemini remains the default provider (`VITE_AI_PROVIDER=gemini`), but you can opt into OpenAI by setting `VITE_AI_PROVIDER=openai` alongside `VITE_OPENAI_API_KEY`.
 3. **Run the development server**
    ```bash
    npm run dev
@@ -39,7 +39,10 @@ Environment variables are validated at startup using [`zod`](https://github.com/
 
 | Variable | Required | Description |
 | --- | --- | --- |
-| `VITE_GEMINI_API_KEY` | Optional (required for Gemini-powered tools) | API key used by AI features such as the influence meter, analyst, and conceptual blender. |
+| `VITE_AI_PROVIDER` | Optional (defaults to `gemini`) | Selects the AI backend: `gemini` or `openai`. |
+| `VITE_GEMINI_API_KEY` | Optional (required for Gemini-powered tools) | API key used by AI features such as the influence meter, analyst, and conceptual blender when Gemini is active. |
+| `VITE_OPENAI_API_KEY` | Optional (required for OpenAI-powered tools) | API key used when `VITE_AI_PROVIDER=openai`. |
+| `VITE_OPENAI_MODEL` | Optional | Override the OpenAI Responses API model (defaults to `gpt-4.1-mini`). |
 | `VITE_DICTIONARY_API_URL` | Optional | Override for the DictionaryAPI endpoint. |
 | `VITE_DATAMUSE_API_URL` | Optional | Override for Datamuse endpoints. |
 | `VITE_CONCEPTNET_API_URL` | Optional | Override for ConceptNet queries. |
@@ -49,7 +52,7 @@ Environment variables are validated at startup using [`zod`](https://github.com/
 If any configured values fail validation, the app halts with a descriptive console error so issues can be resolved before runtime failures occur.
 
 ## Persona-Aware Prompt Playbook
-All Gemini prompts align with three personas. When extending AI interactions, keep the following guardrails in mind:
+All AI prompts align with three personas regardless of provider. When extending AI interactions, keep the following guardrails in mind:
 
 - **Generalist** – Focus on concise, multi-source summaries. Require inline citations (`[dictionaryapi]`, `[conceptnet]`) for every factual claim and avoid speculation. Reinforce safety instructions to stay within provided evidence.
 - **Writer** – Emphasize tone, rhetorical devices, and stylistic inspiration while banning hallucinated facts. Encourage referencing sourced data for credibility, and remind the model to propose multiple creative angles with clear provenance.

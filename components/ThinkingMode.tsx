@@ -1,9 +1,10 @@
 
 import React, { useMemo, useState } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
+import OpenAI from 'openai';
 import type { WordBundle, SourceAttribution } from '../types';
 import LoadingBadge from './LoadingBadge';
-import { assertGeminiKey, env } from '../lib/env';
+import { assertAiKey, env, aiSourceTag, hasAiKey } from '../lib/env';
 import SourceBadge from './SourceBadge';
 
 interface AnalystOutput {
@@ -13,14 +14,48 @@ interface AnalystOutput {
   next: string[];
 }
 
+const analystOpenAiSchema = {
+  name: 'AnalystOutput',
+  schema: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['plan', 'findings', 'ambiguities', 'next'],
+    properties: {
+      plan: { type: 'array', items: { type: 'string' } },
+      findings: { type: 'array', items: { type: 'string' } },
+      ambiguities: { type: 'array', items: { type: 'string' } },
+      next: { type: 'array', items: { type: 'string' } },
+    },
+  },
+} as const;
+
 async function runAnalyst(bundle: WordBundle): Promise<AnalystOutput> {
-  assertGeminiKey('Thinking Mode');
-  const ai = new GoogleGenAI({ apiKey: env.geminiApiKey! });
-  
+  assertAiKey('Thinking Mode');
+
   const prompt = `You are the Analyst. Using ONLY the provided data for "${bundle.query}", perform a brief analysis. Do not invent facts. Cite sources by name (e.g., [dictionaryapi], [conceptnet]).
   Data: ${JSON.stringify({ defs: bundle.definitions.length, rels: bundle.relations.length, wiki_toc: bundle.wiki.toc.length })}
   `;
 
+  const normalize = (payload: any): AnalystOutput => ({
+    plan: Array.isArray(payload?.plan) ? payload.plan.map(String) : [],
+    findings: Array.isArray(payload?.findings) ? payload.findings.map(String) : [],
+    ambiguities: Array.isArray(payload?.ambiguities) ? payload.ambiguities.map(String) : [],
+    next: Array.isArray(payload?.next) ? payload.next.map(String) : [],
+  });
+
+  if (env.aiProvider === 'openai') {
+    const ai = new OpenAI({ apiKey: env.openAiApiKey!, dangerouslyAllowBrowser: true });
+    const response = await ai.responses.create({
+      model: env.openAiModel,
+      input: prompt,
+      response_format: { type: 'json_schema', json_schema: analystOpenAiSchema },
+    });
+    const payload = response.output_text;
+    if (!payload) throw new Error('OpenAI returned an empty response.');
+    return normalize(JSON.parse(payload));
+  }
+
+  const ai = new GoogleGenAI({ apiKey: env.geminiApiKey! });
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
     contents: prompt,
@@ -38,7 +73,7 @@ async function runAnalyst(bundle: WordBundle): Promise<AnalystOutput> {
     },
   });
 
-  return JSON.parse(response.text);
+  return normalize(JSON.parse(response.text));
 }
 
 
@@ -46,8 +81,9 @@ const ThinkingModePanel: React.FC<{ bundle: WordBundle }> = ({ bundle }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [output, setOutput] = useState<AnalystOutput | null>(null);
-  const aiAttribution = useMemo<SourceAttribution>(() => ({ source: 'gemini', fetchedAt: new Date().toISOString() }), []);
-  const missingKey = !env.geminiApiKey;
+  const aiAttribution = useMemo<SourceAttribution>(() => ({ source: aiSourceTag, fetchedAt: new Date().toISOString() }), []);
+  const missingKey = !hasAiKey();
+  const providerKeyLabel = env.aiProvider === 'openai' ? 'VITE_OPENAI_API_KEY' : 'VITE_GEMINI_API_KEY';
 
   const handleRun = async () => {
     setLoading(true);
@@ -77,7 +113,7 @@ const ThinkingModePanel: React.FC<{ bundle: WordBundle }> = ({ bundle }) => {
               </button>
             </div>
         </div>
-        {missingKey && <p className="text-xs text-amber-600" role="status">Set <code className="font-mono">VITE_GEMINI_API_KEY</code> to enable analyst insights.</p>}
+        {missingKey && <p className="text-xs text-amber-600" role="status">Set <code className="font-mono">{providerKeyLabel}</code> to enable analyst insights.</p>}
         {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
         {output && (
             <div className="mt-4 grid sm:grid-cols-2 gap-4 text-sm">
