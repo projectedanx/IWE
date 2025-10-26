@@ -1,8 +1,9 @@
 
 import type { WordBundle } from '../types';
+import { env } from './env';
 
 const MEM = new Map<string, { ts: number; bundle: WordBundle }>();
-const TTL = 1000 * 60 * 30; // 30 minutes
+const TTL = env.cacheTtlMs;
 const CACHE_PREFIX = 'uwe:';
 
 export function getCached(term: string): WordBundle | undefined {
@@ -16,7 +17,7 @@ export function getCached(term: string): WordBundle | undefined {
 
   // Check session storage
   try {
-    const raw = sessionStorage.getItem(CACHE_PREFIX + key);
+    const raw = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(CACHE_PREFIX + key) : null;
     if (raw) {
       const hit = JSON.parse(raw);
       if (Date.now() - hit.ts < TTL) {
@@ -36,9 +37,21 @@ export function setCached(term: string, bundle: WordBundle) {
   const record = { ts: Date.now(), bundle };
   MEM.set(key, record);
   try {
-    sessionStorage.setItem(CACHE_PREFIX + key, JSON.stringify(record));
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(CACHE_PREFIX + key, JSON.stringify(record));
+    }
   } catch (e) {
     console.error("Failed to write to cache", e);
     // Handle potential full storage
   }
+}
+
+export function clearCache() {
+  MEM.clear();
+  if (typeof sessionStorage === 'undefined') return;
+  Object.keys(sessionStorage).forEach(key => {
+    if (key.startsWith(CACHE_PREFIX)) {
+      sessionStorage.removeItem(key);
+    }
+  });
 }

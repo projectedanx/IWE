@@ -2,18 +2,15 @@
 
 This document captures upcoming work items for the project. Each entry references an associated suggestion in `SUGGESTIONS.md` for expanded rationale.
 
-## High-Priority Tasks
+## Completed Work
 
-1. **Set up environment configuration management** – Introduce typed environment schema validation using `zod` or similar to prevent runtime failures (see Suggestion 1).
-2. **Implement orchestrator resilience testing** – Add integration tests simulating partial adapter failures to guarantee graceful degradation (Suggestion 2).
-3. **Design UX for multi-source attribution** – Create UI patterns that visually differentiate AI-generated content from sourced facts (Suggestion 3).
-4. **Add loading, empty, and error states** – Ensure every data surface in the UI communicates status with accessible patterns (Suggestion 4).
-5. **Create adapter performance telemetry** – Instrument adapters with timing metrics surfaced in the dev console or a debug panel (Suggestion 5).
-
-## Secondary Tasks
-
-6. **Persist query history in IndexedDB** – Implement storage hooks and UI to browse historical lookups (Suggestion 6).
-7. **Implement session caching layer** – Cache recent API responses in session storage with expiry controls (Suggestion 7).
-8. **Document AI prompt engineering guidelines** – Expand project docs with persona-driven prompt templates (Suggestion 8).
-9. **Adopt automated accessibility checks** – Integrate `axe-core` or similar into the testing pipeline (Suggestion 9).
-10. **Establish CI pipeline** – Configure GitHub Actions for linting, type-checking, and testing on every push (Suggestion 10).
+- [x] **Set up environment configuration management** – Centralized validation now lives in [`lib/env.ts`](./lib/env.ts) with defaults and descriptive errors.
+- [x] **Implement orchestrator resilience testing** – Vitest coverage in [`services/__tests__/orchestrator.test.ts`](./services/__tests__/orchestrator.test.ts) simulates partial adapter failures.
+- [x] **Design UX for multi-source attribution** – Source badges and AI disclaimers highlight provenance across the Explorer and AI panels.
+- [x] **Add loading, empty, and error states** – Accessible banners communicate progress, empty results, and failures without ambiguity.
+- [x] **Create adapter performance telemetry** – `traceAdapter` instrumentation plus the in-app telemetry panel surface per-source timing.
+- [x] **Persist query history in IndexedDB** – Dexie-backed history powers the `RecentSearches` quick-pick experience.
+- [x] **Implement session caching layer** – Session storage caching respects configurable TTLs and SSR guards via [`lib/cache.ts`](./lib/cache.ts).
+- [x] **Document AI prompt engineering guidelines** – Persona-specific guardrails captured in the [`README`](./README.md#persona-aware-prompt-playbook).
+- [x] **Adopt automated accessibility checks** – `jest-axe` accessibility assertions run within the Vitest pipeline.
+- [x] **Establish CI pipeline** – GitHub Actions workflow [`ci.yml`](./.github/workflows/ci.yml) enforces type safety, build integrity, and test coverage on each push.

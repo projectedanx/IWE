@@ -13,6 +13,7 @@ import ConceptualBlender from './components/ConceptualBlender';
 import ThinkingModePanel from './components/ThinkingMode';
 import RecentSearches from './components/RecentSearches';
 import ExportPanel from './components/ExportPanel';
+import AdapterMetricsPanel from './components/AdapterMetricsPanel';
 
 type AppTabs = 'explore' | 'tools';
 
@@ -24,6 +25,7 @@ const App: React.FC = () => {
   const [errors, setErrors] = useState<BuildResult['errors']>([]);
   const [activeTab, setActiveTab] = useState<AppTabs>('explore');
   const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
+  const [showDebug, setShowDebug] = useState(false);
 
   const debouncedTerm = useDebounce(term, 500);
 
@@ -40,7 +42,7 @@ const App: React.FC = () => {
     }
     
     // Simulate granular loading
-    setLoadingSources({ dictionaryapi: true, 'datamuse-synonyms': true, conceptnet: true, wikipedia: true });
+    setLoadingSources({ dictionaryapi: true, 'datamuse-synonyms': true, 'datamuse-associations': true, conceptnet: true, wikipedia: true });
 
     const { bundle: newBundle, errors: fetchErrors } = await buildWordBundle(searchTerm);
     
@@ -71,8 +73,20 @@ const App: React.FC = () => {
     // The debounced effect will pick this up
   };
 
+  const activeSources = useMemo(() => Object.entries(loadingSources)
+    .filter(([, flag]) => flag)
+    .map(([name]) => name), [loadingSources]);
+
+  const sourceLabels: Record<string, string> = {
+    dictionaryapi: 'DictionaryAPI',
+    'datamuse-synonyms': 'Datamuse Synonyms',
+    'datamuse-associations': 'Datamuse Associations',
+    conceptnet: 'ConceptNet',
+    wikipedia: 'Wikipedia',
+  };
+
   const TabButton = ({ id, label, icon: Icon }: { id: AppTabs; label: string; icon: React.ElementType }) => (
-      <button 
+      <button
         onClick={() => setActiveTab(id)}
         className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
             activeTab === id ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-200'
@@ -86,9 +100,20 @@ const App: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 font-sans">
       <header className="mb-6">
-        <div className="flex items-center gap-2">
-            <Book className="text-gray-800" />
-            <h1 className="text-2xl font-bold text-gray-800">Unified Word Explorer</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+              <Book className="text-gray-800" aria-hidden="true" />
+              <h1 className="text-2xl font-bold text-gray-800">Unified Word Explorer</h1>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowDebug(v => !v)}
+            aria-pressed={showDebug}
+            className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors ${showDebug ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-300 text-gray-700 hover:bg-gray-100'}`}
+          >
+            <SlidersHorizontal size={16} aria-hidden="true" />
+            {showDebug ? 'Hide Telemetry' : 'Show Telemetry'}
+          </button>
         </div>
         <p className="text-gray-600 mt-1">An AI-augmented lexicon dashboard.</p>
       </header>
@@ -114,15 +139,36 @@ const App: React.FC = () => {
             {bundle && <ExportPanel bundle={bundle} />}
         </div>
         
-        {loading && !bundle && <p>Loading for "{term}"...</p>}
-        {errors.length > 0 && (
-          <div className="bg-red-50 text-red-700 p-3 rounded-lg mb-4 text-sm">
-            <p className="font-semibold">Some sources could not be loaded:</p>
-            <ul className="list-disc pl-5 mt-1">
-              {errors.map((e, i) => <li key={i}>{e.source}: {e.message}</li>)}
-            </ul>
-          </div>
-        )}
+        <div className="space-y-4" aria-live="polite">
+          {loading && (
+            <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900" role="status">
+              <p className="font-semibold">Gathering insights for “{term}”.</p>
+              {activeSources.length > 0 && (
+                <ul className="mt-2 list-disc pl-5">
+                  {activeSources.map((source) => (
+                    <li key={source}>{sourceLabels[source] ?? source}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {errors.length > 0 && (
+            <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm" role="alert">
+              <p className="font-semibold">Some sources could not be loaded:</p>
+              <ul className="list-disc pl-5 mt-1 space-y-1">
+                {errors.map((e, i) => <li key={i}>{e.source}: {e.message}</li>)}
+              </ul>
+            </div>
+          )}
+
+          {!loading && !bundle && (
+            <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-gray-600">
+              <p className="font-semibold">Search for any term to start your exploration.</p>
+              <p className="mt-1 text-sm">We will aggregate definitions, semantic relations, and AI insights with clear attribution.</p>
+            </div>
+          )}
+        </div>
 
         {bundle && (
             <div className="space-y-6">
@@ -141,6 +187,18 @@ const App: React.FC = () => {
                   </div>
                 </div>
             </div>
+        )}
+
+        {showDebug && (
+          <section className="mt-8 rounded-lg border border-gray-200 bg-white p-4 shadow-sm" aria-label="Adapter telemetry panel">
+            <header className="mb-3 flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-semibold text-gray-800">Adapter Telemetry</h2>
+                <p className="text-xs text-gray-500">Latest network timings and partial failure details.</p>
+              </div>
+            </header>
+            <AdapterMetricsPanel />
+          </section>
         )}
 
       </main>

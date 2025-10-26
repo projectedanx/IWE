@@ -3,6 +3,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import type { SourceAttribution } from '../types';
 import { fetchConceptEdges } from '../adapters/conceptnet';
 import { fetchDatamuseAssociations } from '../adapters/datamuse';
+import { assertGeminiKey, env } from '../lib/env';
 
 export interface BlendResult {
   blendedConcept: string;
@@ -38,8 +39,8 @@ async function getBlendEvidence(term: string) {
 export async function blendConcepts(conceptA: string, conceptB: string): Promise<BlendResult> {
     safetyCheck(conceptA, conceptB);
 
-    if (!process.env.API_KEY) throw new Error("API_KEY environment variable not set");
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    assertGeminiKey('Conceptual Blender');
+    const ai = new GoogleGenAI({ apiKey: env.geminiApiKey! });
     
     const [evidenceA, evidenceB] = await Promise.all([getBlendEvidence(conceptA), getBlendEvidence(conceptB)]);
 

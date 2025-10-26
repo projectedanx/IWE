@@ -1,7 +1,8 @@
 
 import type { RelationEdge, SourceAttribution } from '../types';
+import { env } from '../lib/env';
 
-const BASE_URL = 'https://api.datamuse.com/words';
+const BASE_URL = env.datamuseApiUrl;
 
 const attr = (): SourceAttribution => ({
     source: 'datamuse',

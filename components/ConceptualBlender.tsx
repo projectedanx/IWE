@@ -1,6 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { blendConcepts, type BlendResult } from '../services/blender';
+import SourceBadge from './SourceBadge';
+import { env } from '../lib/env';
+import type { SourceAttribution } from '../types';
 
 const ConceptualBlender: React.FC = () => {
   const [conceptA, setConceptA] = useState('philosophy');
@@ -8,6 +11,8 @@ const ConceptualBlender: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [result, setResult] = useState<BlendResult | null>(null);
+  const aiAttribution = useMemo<SourceAttribution>(() => ({ source: 'gemini', fetchedAt: new Date().toISOString() }), []);
+  const missingKey = !env.geminiApiKey;
 
   const handleBlend = async () => {
     setLoading(true);
@@ -25,7 +30,10 @@ const ConceptualBlender: React.FC = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200/80 p-4 space-y-4">
-      <h3 className="font-semibold text-gray-800">Conceptual Blender</h3>
+      <div className="flex items-center gap-2">
+        <h3 className="font-semibold text-gray-800">Conceptual Blender</h3>
+        <SourceBadge attribution={aiAttribution} />
+      </div>
       <div className="grid sm:grid-cols-2 gap-3">
         <input
           value={conceptA}
@@ -42,18 +50,22 @@ const ConceptualBlender: React.FC = () => {
       </div>
       <button
         onClick={handleBlend}
-        disabled={loading || !conceptA || !conceptB}
+        disabled={loading || !conceptA || !conceptB || missingKey}
         className="px-4 py-2 rounded-md bg-black text-white disabled:opacity-50 w-full sm:w-auto"
       >
         {loading ? 'Blending...' : 'Blend Concepts'}
       </button>
 
+      {missingKey && <p className="text-xs text-amber-600">Provide <code className="font-mono">VITE_GEMINI_API_KEY</code> to blend new concepts.</p>}
       {error && <div className="text-sm text-red-600 p-2 bg-red-50 rounded-md">{error}</div>}
-      
+
       {result && (
         <div className="space-y-3 text-sm pt-4 border-t">
           <h4 className="text-xl font-bold text-gray-800">{result.blendedConcept}</h4>
           <p className="text-gray-600">{result.definition}</p>
+          <div className="flex flex-wrap gap-2">
+            {result.attribution?.map((attr, idx) => <SourceBadge key={idx} attribution={attr} />)}
+          </div>
           
           {['properties', 'applications', 'metaphors', 'riskNotes'].map(key => {
             const items = result[key as keyof BlendResult] as string[];

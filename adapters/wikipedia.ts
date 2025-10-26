@@ -1,7 +1,8 @@
 
 import type { WikiTocItem } from '../types';
+import { env } from '../lib/env';
 
-const API_ENDPOINT = 'https://en.wikipedia.org/w/api.php';
+const API_ENDPOINT = env.wikipediaApiUrl;
 
 export async function fetchWikiToc(title: string): Promise<WikiTocItem[]> {
     const params = new URLSearchParams({

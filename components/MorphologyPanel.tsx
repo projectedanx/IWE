@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import type { WordBundle, MorphVariant } from '../types';
 import { generateMorphology } from '../services/morphology';
 import LoadingBadge from './LoadingBadge';
+import SourceBadge from './SourceBadge';
 
 interface MorphologyPanelProps {
   root: WordBundle;
@@ -37,16 +38,18 @@ const MorphologyPanel: React.FC<MorphologyPanelProps> = ({ root, onPick }) => {
       {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
       
       {variants.length > 0 ? (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-3">
           {variants.map((v, i) => (
-            <button 
-              key={i}
-              onClick={() => onPick(v.form)}
-              className="text-sm px-2 py-1 rounded bg-gray-100 border hover:bg-gray-200 transition-colors flex items-center gap-1.5"
-            >
-              <span className={`text-xs font-mono px-1 rounded ${v.kind === 'prefix' ? 'bg-green-100 text-green-800' : v.kind === 'suffix' ? 'bg-purple-100 text-purple-800' : 'bg-orange-100 text-orange-800'}`}>{v.kind}</span>
-              {v.form}
-            </button>
+            <div key={i} className="flex flex-col items-start gap-1">
+              <button
+                onClick={() => onPick(v.form)}
+                className="text-sm px-2 py-1 rounded bg-gray-100 border hover:bg-gray-200 transition-colors flex items-center gap-1.5"
+              >
+                <span className={`text-xs font-mono px-1 rounded ${v.kind === 'prefix' ? 'bg-green-100 text-green-800' : v.kind === 'suffix' ? 'bg-purple-100 text-purple-800' : 'bg-orange-100 text-orange-800'}`}>{v.kind}</span>
+                {v.form}
+              </button>
+              <SourceBadge attribution={v.attribution} />
+            </div>
           ))}
         </div>
       ) : (!loading && !error &&

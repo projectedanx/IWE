@@ -4,9 +4,10 @@
 
 ## Current Status
 - ✅ Core Vite + React + TypeScript scaffold is in place.
-- ✅ Adapters and services directories are structured for multi-source integrations.
-- ⚠️ UX, accessibility states, caching, and testing require significant enhancement (see [`SUGGESTIONS.md`](./SUGGESTIONS.md)).
-- ⚠️ Deployment and CI/CD automation have not been configured.
+- ✅ Environment configuration is validated at runtime via [`lib/env.ts`](./lib/env.ts) with sensible defaults and actionable error messages.
+- ✅ Adapters surface attribution, telemetry, and graceful degradation paths backed by automated resilience and accessibility tests.
+- ⚠️ Additional product polish (e.g., deeper analytics visualizations) remains in the idea backlog (see [`SUGGESTIONS.md`](./SUGGESTIONS.md)).
+- ✅ Continuous integration now enforces type-safety, unit coverage, and accessibility checks.
 
 ## Key Architectural Concepts
 - **Adapter Pattern:** Each external API integration belongs in `src/adapters`, normalizing output into shared types defined in `src/types`.
@@ -20,7 +21,7 @@
    npm install
    ```
 2. **Configure environment variables**
-   - Duplicate `.env.local.example` (or create `.env.local`) and set `GEMINI_API_KEY`.
+   - Duplicate `.env.example` (or create `.env.local`) and set the values described below. At minimum you will want `VITE_GEMINI_API_KEY` for Gemini-powered features.
 3. **Run the development server**
    ```bash
    npm run dev
@@ -33,7 +34,30 @@
 - Track actionable work in [`TODO.md`](./TODO.md) and reference rationales in [`SUGGESTIONS.md`](./SUGGESTIONS.md).
 - Prioritize semantic fidelity, accessibility, and resilience with every change.
 
+## Environment Configuration
+Environment variables are validated at startup using [`zod`](https://github.com/colinhacks/zod). Supported keys include:
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `VITE_GEMINI_API_KEY` | Optional (required for Gemini-powered tools) | API key used by AI features such as the influence meter, analyst, and conceptual blender. |
+| `VITE_DICTIONARY_API_URL` | Optional | Override for the DictionaryAPI endpoint. |
+| `VITE_DATAMUSE_API_URL` | Optional | Override for Datamuse endpoints. |
+| `VITE_CONCEPTNET_API_URL` | Optional | Override for ConceptNet queries. |
+| `VITE_WIKIPEDIA_API_URL` | Optional | Override for the Wikipedia parsing API. |
+| `VITE_CACHE_TTL_MINUTES` | Optional | Session cache lifetime (defaults to 30 minutes). |
+
+If any configured values fail validation, the app halts with a descriptive console error so issues can be resolved before runtime failures occur.
+
+## Persona-Aware Prompt Playbook
+All Gemini prompts align with three personas. When extending AI interactions, keep the following guardrails in mind:
+
+- **Generalist** – Focus on concise, multi-source summaries. Require inline citations (`[dictionaryapi]`, `[conceptnet]`) for every factual claim and avoid speculation. Reinforce safety instructions to stay within provided evidence.
+- **Writer** – Emphasize tone, rhetorical devices, and stylistic inspiration while banning hallucinated facts. Encourage referencing sourced data for credibility, and remind the model to propose multiple creative angles with clear provenance.
+- **Researcher** – Drive analytical depth using structured outputs (`responseSchema`) and explicit constraints that forbid unsupported claims. Ask for open questions, conflicting evidence, and next-step hypotheses citing relevant adapters.
+
+Whenever a new prompt is introduced, document the persona alignment, safety checks, and expected output structure to maintain semantic fidelity.
+
 ## Next Steps
-1. Implement environment schema validation and graceful degradation tests.
-2. Design attribution-forward UX patterns with comprehensive loading and error states.
-3. Establish telemetry, storage, caching, and CI pipelines to support reliable iteration.
+1. Explore additional visualizations that highlight adapter telemetry trends over time.
+2. Expand IndexedDB history browsing with filtering and exporting workflows.
+3. Continue evolving persona-specific AI tooling with reusable prompt templates.

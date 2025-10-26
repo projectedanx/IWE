@@ -1,7 +1,8 @@
 
 import type { RelationEdge } from '../types';
+import { env } from '../lib/env';
 
-const BASE_URL = 'https://api.conceptnet.io';
+const BASE_URL = env.conceptNetApiUrl;
 
 function normalizeTerm(term: string): string {
     return term.trim().toLowerCase().replace(/\s+/g, '_');

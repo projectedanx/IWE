@@ -1,8 +1,9 @@
 
 import type { InfluenceScore, WordBundle } from '../types';
 import { GoogleGenAI } from "@google/genai";
+import { assertGeminiKey, env } from '../lib/env';
 
-const DATAMUSE_URL = "https://api.datamuse.com/words";
+const DATAMUSE_URL = env.datamuseApiUrl;
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 
 async function getDatamuseFrequency(term: string): Promise<number> {
@@ -29,8 +30,8 @@ function getIntensityHeuristic(word: string): number {
 
 async function getPolarityFromGemini(word: string, definitions: string[]): Promise<number> {
   try {
-    if (!process.env.API_KEY) throw new Error("API_KEY environment variable not set");
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    assertGeminiKey('Influence polarity analysis');
+    const ai = new GoogleGenAI({ apiKey: env.geminiApiKey! });
     const prompt = `Analyze the sentiment polarity of the English word "${word}". Definitions: "${definitions.join('; ')}". Respond with ONLY a single number from -1.0 (very negative) to 1.0 (very positive).`;
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
