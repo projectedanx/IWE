@@ -1,20 +1,39 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# The Users Request – Lexicon Research Companion
 
-# Run and deploy your AI Studio app
+"The Users Request with beyond expected expectations" is a multi-source, AI-augmented lexicon companion that fuses authoritative language datasets with guided generative insights. The application prioritizes attribution, resilience, and a frictionless research workflow for writers, researchers, and generalists alike.
 
-This contains everything you need to run your app locally.
+## Current Status
+- ✅ Core Vite + React + TypeScript scaffold is in place.
+- ✅ Adapters and services directories are structured for multi-source integrations.
+- ⚠️ UX, accessibility states, caching, and testing require significant enhancement (see [`SUGGESTIONS.md`](./SUGGESTIONS.md)).
+- ⚠️ Deployment and CI/CD automation have not been configured.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1pTxERbrkmrxjcNqQ0RVoR5f-s7kxnSSL
+## Key Architectural Concepts
+- **Adapter Pattern:** Each external API integration belongs in `src/adapters`, normalizing output into shared types defined in `src/types`.
+- **Orchestrator Service:** `src/services/orchestrator.ts` coordinates adapter calls via `Promise.allSettled`, aggregating data into a unified `WordBundle`.
+- **Client Storage:** IndexedDB will persist long-lived history, while session storage will cache transient results.
+- **AI Integration:** All Gemini interactions should flow through `@google/genai`, following the guardrails documented in [`AGENTS.md`](./AGENTS.md).
 
-## Run Locally
+## Getting Started
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
+2. **Configure environment variables**
+   - Duplicate `.env.local.example` (or create `.env.local`) and set `GEMINI_API_KEY`.
+3. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+4. **Open the app**
+   - Navigate to the printed local URL.
 
-**Prerequisites:**  Node.js
+## Development Guidelines
+- Review [`AGENTS.md`](./AGENTS.md) for the canonical engineering identity and guardrails.
+- Track actionable work in [`TODO.md`](./TODO.md) and reference rationales in [`SUGGESTIONS.md`](./SUGGESTIONS.md).
+- Prioritize semantic fidelity, accessibility, and resilience with every change.
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Next Steps
+1. Implement environment schema validation and graceful degradation tests.
+2. Design attribution-forward UX patterns with comprehensive loading and error states.
+3. Establish telemetry, storage, caching, and CI pipelines to support reliable iteration.
