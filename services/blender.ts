@@ -92,9 +92,9 @@ export async function blendConcepts(conceptA: string, conceptB: string): Promise
                 },
             },
         });
-        const payload = response.output_text;
-        if (!payload) throw new Error('OpenAI returned an empty response.');
-        const result = normalize(JSON.parse(payload));
+        const jsonPayload = response.output?.[0]?.content?.find((part: any) => 'json' in part)?.json;
+        if (!jsonPayload) throw new Error('OpenAI returned an empty response.');
+        const result = normalize(jsonPayload);
         return {
             ...result,
             attribution: [{ source: aiSourceTag, fetchedAt: new Date().toISOString() }],
