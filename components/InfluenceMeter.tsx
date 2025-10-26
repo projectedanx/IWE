@@ -1,8 +1,9 @@
 
-import React, { useEffect, useState } from 'react';
-import type { WordBundle, InfluenceScore } from '../types';
+import React, { useEffect, useMemo, useState } from 'react';
+import type { WordBundle, InfluenceScore, SourceAttribution } from '../types';
 import { computeInfluence } from '../services/influence';
 import LoadingBadge from './LoadingBadge';
+import SourceBadge from './SourceBadge';
 
 interface InfluenceMeterProps {
   bundle: WordBundle;
@@ -24,6 +25,7 @@ const InfluenceMeter: React.FC<InfluenceMeterProps> = ({ bundle }) => {
   const [score, setScore] = useState<InfluenceScore | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
+  const aiAttribution = useMemo<SourceAttribution>(() => ({ source: 'gemini', fetchedAt: new Date().toISOString() }), []);
 
   useEffect(() => {
     let isMounted = true;
@@ -41,9 +43,10 @@ const InfluenceMeter: React.FC<InfluenceMeterProps> = ({ bundle }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200/80 p-4">
-      <div className="flex items-center">
+      <div className="flex items-center gap-2 flex-wrap">
         <h3 className="font-semibold text-gray-800">Word Influence Meter</h3>
-        <LoadingBadge loading={loading} className="ml-2" />
+        <SourceBadge attribution={aiAttribution} />
+        <LoadingBadge loading={loading} />
       </div>
       {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
       

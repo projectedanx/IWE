@@ -4,6 +4,7 @@ import { fetchConceptEdges } from '../adapters/conceptnet';
 import { fetchWikiToc } from '../adapters/wikipedia';
 import { fetchDictionaryData } from '../adapters/dictionary';
 import type { WordBundle } from '../types';
+import { traceAdapter } from '../lib/telemetry';
 
 export interface BuildResult {
   bundle: WordBundle;
@@ -19,7 +20,24 @@ async function safe<T,>(label: string, promise: Promise<T>): Promise<[T | undefi
   }
 }
 
-export async function buildWordBundle(term: string): Promise<BuildResult> {
+type OrchestratorDependencies = {
+  dictionary: typeof fetchDictionaryData;
+  datamuseSynonyms: typeof fetchDatamuseSynonyms;
+  datamuseAssociations: typeof fetchDatamuseAssociations;
+  conceptnet: typeof fetchConceptEdges;
+  wikipedia: typeof fetchWikiToc;
+};
+
+const defaultDeps: OrchestratorDependencies = {
+  dictionary: fetchDictionaryData,
+  datamuseSynonyms: fetchDatamuseSynonyms,
+  datamuseAssociations: fetchDatamuseAssociations,
+  conceptnet: fetchConceptEdges,
+  wikipedia: fetchWikiToc,
+};
+
+export async function buildWordBundle(term: string, overrides: Partial<OrchestratorDependencies> = {}): Promise<BuildResult> {
+  const deps = { ...defaultDeps, ...overrides };
   const errors: BuildResult['errors'] = [];
 
   const [
@@ -29,11 +47,11 @@ export async function buildWordBundle(term: string): Promise<BuildResult> {
     [edges, edgeError],
     [toc, tocError]
   ] = await Promise.all([
-    safe('dictionaryapi', fetchDictionaryData(term)),
-    safe('datamuse-synonyms', fetchDatamuseSynonyms(term)),
-    safe('datamuse-associations', fetchDatamuseAssociations(term)),
-    safe('conceptnet', fetchConceptEdges(term)),
-    safe('wikipedia', fetchWikiToc(term)),
+    safe('dictionaryapi', traceAdapter('dictionaryapi', () => deps.dictionary(term))),
+    safe('datamuse-synonyms', traceAdapter('datamuse-synonyms', () => deps.datamuseSynonyms(term))),
+    safe('datamuse-associations', traceAdapter('datamuse-associations', () => deps.datamuseAssociations(term))),
+    safe('conceptnet', traceAdapter('conceptnet', () => deps.conceptnet(term))),
+    safe('wikipedia', traceAdapter('wikipedia', () => deps.wikipedia(term))),
   ]);
 
   // Collect errors
@@ -54,3 +72,5 @@ export async function buildWordBundle(term: string): Promise<BuildResult> {
 
   return { bundle, errors };
 }
+
+export type { OrchestratorDependencies };

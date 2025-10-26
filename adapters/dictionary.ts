@@ -1,7 +1,8 @@
 
 import type { Definition, Phonetic, SourceAttribution } from '../types';
+import { env } from '../lib/env';
 
-const API_URL = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
+const API_URL = env.dictionaryApiUrl.endsWith('/') ? env.dictionaryApiUrl : `${env.dictionaryApiUrl}/`;
 
 interface DictionaryAPIResponse {
     word: string;

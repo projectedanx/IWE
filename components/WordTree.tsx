@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
 import { ChevronRight, Volume2 } from 'lucide-react';
-import type { WordBundle } from '../types';
+import type { SourceAttribution, WordBundle } from '../types';
 import LoadingBadge from './LoadingBadge';
+import SourceBadge from './SourceBadge';
 
 interface SectionProps {
   id: string;
@@ -11,9 +12,10 @@ interface SectionProps {
   loading?: boolean;
   children: React.ReactNode;
   defaultOpen?: boolean;
+  sources?: SourceAttribution[];
 }
 
-const Section: React.FC<SectionProps> = ({ id, title, count, loading, children, defaultOpen = true }) => {
+const Section: React.FC<SectionProps> = ({ id, title, count, loading, children, defaultOpen = true, sources = [] }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
@@ -21,15 +23,22 @@ const Section: React.FC<SectionProps> = ({ id, title, count, loading, children, 
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between w-full p-4 text-left"
+        aria-expanded={isOpen}
+        aria-controls={id}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <ChevronRight size={18} className={`transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} />
           <h3 className="font-semibold text-gray-800">{title}</h3>
           {count !== undefined && <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">{count}</span>}
         </div>
-        <LoadingBadge loading={loading ?? false} />
+        <div className="flex items-center gap-2">
+          {sources.map((source, idx) => (
+            <SourceBadge key={`${source.source}-${idx}`} attribution={source} />
+          ))}
+          <LoadingBadge loading={loading ?? false} />
+        </div>
       </button>
-      {isOpen && <div className="p-4 pt-0 pl-10 space-y-3 text-gray-700">{children}</div>}
+      {isOpen && <div id={id} className="p-4 pt-0 pl-10 space-y-3 text-gray-700">{children}</div>}
     </div>
   );
 };
@@ -52,6 +61,15 @@ const WordTree: React.FC<WordTreeProps> = ({ bundle, loading }) => {
     return acc;
   }, {} as Record<string, typeof bundle.relations>);
 
+  const relationSources = Array.from(
+    bundle.relations.reduce((map, relation) => {
+      if (!map.has(relation.attribution.source)) {
+        map.set(relation.attribution.source, relation.attribution);
+      }
+      return map;
+    }, new Map<string, SourceAttribution>())
+  ).map(([, attr]) => attr);
+
   return (
     <div className="space-y-4">
       {bundle.phonetics && bundle.phonetics.length > 0 && (
@@ -66,29 +84,49 @@ const WordTree: React.FC<WordTreeProps> = ({ bundle, loading }) => {
       )}
 
       {bundle.etymology && (
-         <Section id="etymology" title="Etymology" loading={loading.dictionaryapi}>
+         <Section
+           id="etymology"
+           title="Etymology"
+           loading={loading.dictionaryapi}
+           sources={bundle.definitions[0]?.attribution ? [bundle.definitions[0].attribution] : []}
+         >
           <p className="text-sm leading-relaxed">{bundle.etymology}</p>
         </Section>
       )}
 
-      <Section id="definitions" title="Definitions" count={bundle.definitions.length} loading={loading.dictionaryapi}>
+      <Section
+        id="definitions"
+        title="Definitions"
+        count={bundle.definitions.length}
+        loading={loading.dictionaryapi}
+        sources={bundle.definitions.slice(0, 1).map(def => def.attribution)}
+      >
         {bundle.definitions.length > 0 ? bundle.definitions.map((def, i) => (
           <div key={i} className="text-sm">
             <p><span className="font-semibold px-2 py-0.5 rounded bg-gray-100 mr-2">{def.partOfSpeech || 'def'}</span>{def.text}</p>
             {def.examples && def.examples.length > 0 && (
               <p className="mt-1 pl-4 text-xs text-gray-500 italic">e.g., "{def.examples[0]}"</p>
             )}
+            <SourceBadge attribution={def.attribution} className="mt-2" />
           </div>
         )) : <p className="text-sm text-gray-500">No definitions found.</p>}
       </Section>
 
-      <Section id="relations" title="Semantic Relations" count={bundle.relations.length} loading={loading.conceptnet || loading['datamuse-synonyms']}>
+      <Section
+        id="relations"
+        title="Semantic Relations"
+        count={bundle.relations.length}
+        loading={loading.conceptnet || loading['datamuse-synonyms']}
+        sources={relationSources}
+      >
         {Object.keys(groupedRelations).length > 0 ? Object.entries(groupedRelations).map(([rel, items]) => (
           <div key={rel}>
             <h4 className="font-medium text-sm capitalize mb-1">{rel} ({items.length})</h4>
             <div className="flex flex-wrap gap-1.5">
               {items.slice(0, 15).map((item, i) => (
-                <span key={i} className="text-xs px-2 py-1 bg-blue-50 text-blue-800 rounded">{item.target}</span>
+                <span key={i} className="text-xs px-2 py-1 bg-blue-50 text-blue-800 rounded" title={`Source: ${item.attribution.source}`}>
+                  {item.target}
+                </span>
               ))}
               {items.length > 15 && <span className="text-xs p-1 text-gray-400">...and {items.length - 15} more</span>}
             </div>
@@ -96,7 +134,13 @@ const WordTree: React.FC<WordTreeProps> = ({ bundle, loading }) => {
         )) : <p className="text-sm text-gray-500">No semantic relations found.</p>}
       </Section>
 
-      <Section id="wiki" title="Wikipedia Subtopics" count={bundle.wiki.toc.length} loading={loading.wikipedia}>
+      <Section
+        id="wiki"
+        title="Wikipedia Subtopics"
+        count={bundle.wiki.toc.length}
+        loading={loading.wikipedia}
+        sources={bundle.wiki.toc.slice(0, 1).map(item => item.attribution)}
+      >
         {bundle.wiki.toc.length > 0 ? (
           <ul className="space-y-1">
             {bundle.wiki.toc.map(item => (
@@ -104,6 +148,7 @@ const WordTree: React.FC<WordTreeProps> = ({ bundle, loading }) => {
                 <a href={`https://en.wikipedia.org/wiki/${bundle.query}#${item.anchor}`} target="_blank" rel="noopener noreferrer" className="hover:underline">
                   <span className="text-gray-400 mr-2">{item.index}</span>{item.title}
                 </a>
+                <SourceBadge attribution={item.attribution} className="ml-2" />
               </li>
             ))}
           </ul>

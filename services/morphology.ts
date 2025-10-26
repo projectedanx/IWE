@@ -1,8 +1,12 @@
 
 import type { MorphVariant, SourceAttribution } from '../types';
+import { env } from '../lib/env';
 
-const DATAMUSE_API = "https://api.datamuse.com/words";
-const DICTIONARY_API = (w: string) => `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(w)}`;
+const DATAMUSE_API = env.datamuseApiUrl;
+const DICTIONARY_API = (w: string) => {
+  const base = env.dictionaryApiUrl.endsWith('/') ? env.dictionaryApiUrl : `${env.dictionaryApiUrl}/`;
+  return `${base}${encodeURIComponent(w)}`;
+};
 
 export type ValidationSource = "datamuse" | "dictionaryapi";
 const now = () => new Date().toISOString();

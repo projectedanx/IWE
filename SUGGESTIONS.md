@@ -2,23 +2,13 @@
 
 Below are ten targeted improvements designed to elevate robustness, usability, and maintainability. Each suggestion links to a corresponding task in `TODO.md`.
 
-1. **Typed environment validation**  
-   Introduce a centralized configuration module (e.g., `src/lib/config.ts`) that validates required environment variables at startup using `zod`. This prevents silent misconfiguration and clarifies deployment requirements.
-2. **Graceful degradation test suite**  
-   Expand the test harness to simulate adapter timeouts and API errors, ensuring the orchestrator preserves partial successes and surfaces failed sources to the UI.
-3. **Attribution-forward UX audit**  
-   Partner with design to craft visual patterns that distinguish AI-generated insights from sourced facts. Include badges, tooltips, and inline citations that reference adapter names.
-4. **Holistic status handling**  
-   Add loading skeletons, empty-state illustrations, and error banners for every surface (definitions, synonyms, concepts, etc.) while honoring WCAG color contrast and keyboard navigation.
-5. **Adapter telemetry and logging**  
-   Wrap adapter calls with timing metrics and structured logs to monitor performance regressions, optionally surfacing a developer debug console in development builds.
-6. **IndexedDB-powered history**  
-   Build a persistent search history feature using the `idb` package, with filters and the ability to restore a previous `WordBundle` snapshot.
-7. **Session cache middleware**  
-   Cache recent adapter responses in session storage with expiry metadata to cut redundant network requests during a session without risking stale long-term data.
-8. **Persona-aware prompt library**  
-   Curate a prompt playbook for the Generalist, Writer, and Researcher personas, capturing guardrails for citations and source usage to streamline AI orchestration.
-9. **Automated accessibility regression checks**  
-   Integrate automated accessibility tooling (e.g., `@axe-core/react`) into CI and local development to catch issues introduced by rapid UI iteration.
-10. **Continuous integration pipeline**  
-    Add a GitHub Actions workflow that runs linting, type-checking, tests, and accessibility audits on pull requests to maintain quality gates.
+1. **Typed environment validation** – ✅ Implemented via [`lib/env.ts`](./lib/env.ts) with `zod`-backed schema enforcement and ergonomic defaults.
+2. **Graceful degradation test suite** – ✅ Covered by the orchestrator resilience test in [`services/__tests__/orchestrator.test.ts`](./services/__tests__/orchestrator.test.ts).
+3. **Attribution-forward UX audit** – ✅ Source badges, AI disclaimers, and persona cues now appear throughout the Explorer and AI tools.
+4. **Holistic status handling** – ✅ Accessible loading, empty, and error states ensure users understand system feedback on every surface.
+5. **Adapter telemetry and logging** – ✅ The new debug panel and `traceAdapter` helper expose adapter timings and errors without crashing the app.
+6. **IndexedDB-powered history** – ✅ `lib/history.ts` persists lookups in Dexie with the `RecentSearches` component providing quick recall.
+7. **Session cache middleware** – ✅ `lib/cache.ts` now honours configurable TTLs and guards against SSR/sessionStorage gaps.
+8. **Persona-aware prompt library** – ✅ Prompt guardrails documented in [`README.md`](./README.md#persona-aware-prompt-playbook) with persona-specific design notes.
+9. **Automated accessibility regression checks** – ✅ `jest-axe` runs within Vitest to keep accessibility regressions from shipping.
+10. **Continuous integration pipeline** – ✅ CI workflow ensures tests and type checks run for every push (see `.github/workflows/ci.yml`).
