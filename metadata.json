@@ -1,0 +1,5 @@
+{
+  "name": "Unified Word Explorer",
+  "description": "A multi-source, AI-augmented lexicon dashboard that unifies definitions, morphology, etymology, lexical and semantic relations, associations, and encyclopedic structure, with AI-assisted analysis from Gemini.",
+  "requestFramePermissions": []
+}
