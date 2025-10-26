@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { SourceTag } from '../types';
 
 const rawEnv: Record<string, unknown> = (() => {
   try {
@@ -11,9 +12,16 @@ const rawEnv: Record<string, unknown> = (() => {
   return process.env as Record<string, unknown>;
 })();
 
+const providerSchema = z.enum(['gemini', 'openai']);
+
 const envSchema = z.object({
   VITE_GEMINI_API_KEY: z.string().trim().min(1).optional(),
   GEMINI_API_KEY: z.string().trim().min(1).optional(),
+  VITE_OPENAI_API_KEY: z.string().trim().min(1).optional(),
+  OPENAI_API_KEY: z.string().trim().min(1).optional(),
+  VITE_OPENAI_MODEL: z.string().trim().min(1).optional(),
+  VITE_AI_PROVIDER: providerSchema.optional(),
+  AI_PROVIDER: providerSchema.optional(),
   VITE_DICTIONARY_API_URL: z.string().trim().url().optional(),
   VITE_DATAMUSE_API_URL: z.string().trim().url().optional(),
   VITE_CONCEPTNET_API_URL: z.string().trim().url().optional(),
@@ -29,9 +37,13 @@ if (!parsed.success) {
 }
 
 const data = parsed.data;
+const provider = (data.VITE_AI_PROVIDER ?? data.AI_PROVIDER ?? 'gemini') as z.infer<typeof providerSchema>;
 
 export const env = {
+  aiProvider: provider,
   geminiApiKey: data.VITE_GEMINI_API_KEY ?? data.GEMINI_API_KEY ?? undefined,
+  openAiApiKey: data.VITE_OPENAI_API_KEY ?? data.OPENAI_API_KEY ?? undefined,
+  openAiModel: data.VITE_OPENAI_MODEL ?? 'gpt-4.1-mini',
   dictionaryApiUrl: data.VITE_DICTIONARY_API_URL ?? 'https://api.dictionaryapi.dev/api/v2/entries/en/',
   datamuseApiUrl: data.VITE_DATAMUSE_API_URL ?? 'https://api.datamuse.com/words',
   conceptNetApiUrl: data.VITE_CONCEPTNET_API_URL ?? 'https://api.conceptnet.io',
@@ -41,9 +53,28 @@ export const env = {
 
 export type EnvShape = typeof env;
 
+export const aiSourceTag: SourceTag = env.aiProvider === 'openai' ? 'openai' : 'gemini';
+
 export function assertGeminiKey(feature: string) {
   if (!env.geminiApiKey) {
     throw new Error(`${feature} requires VITE_GEMINI_API_KEY to be configured.`);
   }
+}
+
+export function assertAiKey(feature: string) {
+  if (env.aiProvider === 'gemini') {
+    assertGeminiKey(feature);
+    return;
+  }
+
+  if (!env.openAiApiKey) {
+    throw new Error(`${feature} requires VITE_OPENAI_API_KEY to be configured.`);
+  }
+}
+
+export function hasAiKey(): boolean {
+  return env.aiProvider === 'gemini'
+    ? Boolean(env.geminiApiKey)
+    : Boolean(env.openAiApiKey);
 }
 

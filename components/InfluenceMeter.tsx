@@ -4,6 +4,7 @@ import type { WordBundle, InfluenceScore, SourceAttribution } from '../types';
 import { computeInfluence } from '../services/influence';
 import LoadingBadge from './LoadingBadge';
 import SourceBadge from './SourceBadge';
+import { aiSourceTag } from '../lib/env';
 
 interface InfluenceMeterProps {
   bundle: WordBundle;
@@ -25,7 +26,7 @@ const InfluenceMeter: React.FC<InfluenceMeterProps> = ({ bundle }) => {
   const [score, setScore] = useState<InfluenceScore | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
-  const aiAttribution = useMemo<SourceAttribution>(() => ({ source: 'gemini', fetchedAt: new Date().toISOString() }), []);
+  const aiAttribution = useMemo<SourceAttribution>(() => ({ source: aiSourceTag, fetchedAt: new Date().toISOString() }), []);
 
   useEffect(() => {
     let isMounted = true;

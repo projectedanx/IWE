@@ -1,9 +1,10 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
+import OpenAI from 'openai';
 import type { SourceAttribution } from '../types';
 import { fetchConceptEdges } from '../adapters/conceptnet';
 import { fetchDatamuseAssociations } from '../adapters/datamuse';
-import { assertGeminiKey, env } from '../lib/env';
+import { assertAiKey, env, aiSourceTag } from '../lib/env';
 
 export interface BlendResult {
   blendedConcept: string;
@@ -39,14 +40,13 @@ async function getBlendEvidence(term: string) {
 export async function blendConcepts(conceptA: string, conceptB: string): Promise<BlendResult> {
     safetyCheck(conceptA, conceptB);
 
-    assertGeminiKey('Conceptual Blender');
-    const ai = new GoogleGenAI({ apiKey: env.geminiApiKey! });
-    
+    assertAiKey('Conceptual Blender');
+
     const [evidenceA, evidenceB] = await Promise.all([getBlendEvidence(conceptA), getBlendEvidence(conceptB)]);
 
     const prompt = `
     Blend the concepts "${conceptA}" and "${conceptB}".
-    
+
     Data for ${conceptA}:
     - ConceptNet Relations: ${JSON.stringify(evidenceA.conceptnet)}
     - Associations: ${JSON.stringify(evidenceA.associations)}
@@ -54,10 +54,54 @@ export async function blendConcepts(conceptA: string, conceptB: string): Promise
     Data for ${conceptB}:
     - ConceptNet Relations: ${JSON.stringify(evidenceB.conceptnet)}
     - Associations: ${JSON.stringify(evidenceB.associations)}
-    
+
     Generate a creative, blended concept.
     `;
 
+    const normalize = (payload: any) => ({
+        blendedConcept: typeof payload?.blendedConcept === 'string' ? payload.blendedConcept : `${conceptA} × ${conceptB}`,
+        definition: typeof payload?.definition === 'string' ? payload.definition : '',
+        properties: Array.isArray(payload?.properties) ? payload.properties.map(String) : [],
+        applications: Array.isArray(payload?.applications) ? payload.applications.map(String) : [],
+        metaphors: Array.isArray(payload?.metaphors) ? payload.metaphors.map(String) : [],
+        riskNotes: Array.isArray(payload?.riskNotes) ? payload.riskNotes.map(String) : [],
+    });
+
+    if (env.aiProvider === 'openai') {
+        const ai = new OpenAI({ apiKey: env.openAiApiKey!, dangerouslyAllowBrowser: true });
+        const response = await ai.responses.create({
+            model: env.openAiModel,
+            input: prompt,
+            response_format: {
+                type: 'json_schema',
+                json_schema: {
+                    name: 'ConceptBlend',
+                    schema: {
+                        type: 'object',
+                        additionalProperties: false,
+                        required: ['blendedConcept', 'definition', 'properties', 'applications', 'metaphors', 'riskNotes'],
+                        properties: {
+                            blendedConcept: { type: 'string' },
+                            definition: { type: 'string' },
+                            properties: { type: 'array', items: { type: 'string' } },
+                            applications: { type: 'array', items: { type: 'string' } },
+                            metaphors: { type: 'array', items: { type: 'string' } },
+                            riskNotes: { type: 'array', items: { type: 'string' } },
+                        },
+                    },
+                },
+            },
+        });
+        const payload = response.output_text;
+        if (!payload) throw new Error('OpenAI returned an empty response.');
+        const result = normalize(JSON.parse(payload));
+        return {
+            ...result,
+            attribution: [{ source: aiSourceTag, fetchedAt: new Date().toISOString() }],
+        };
+    }
+
+    const ai = new GoogleGenAI({ apiKey: env.geminiApiKey! });
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: prompt,
@@ -77,10 +121,10 @@ export async function blendConcepts(conceptA: string, conceptB: string): Promise
         },
     });
 
-    const result = JSON.parse(response.text);
-    
+    const result = normalize(JSON.parse(response.text));
+
     return {
         ...result,
-        attribution: [{ source: 'gemini', fetchedAt: new Date().toISOString() }],
+        attribution: [{ source: aiSourceTag, fetchedAt: new Date().toISOString() }],
     };
 }

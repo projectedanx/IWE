@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { blendConcepts, type BlendResult } from '../services/blender';
 import SourceBadge from './SourceBadge';
-import { env } from '../lib/env';
+import { env, aiSourceTag, hasAiKey } from '../lib/env';
 import type { SourceAttribution } from '../types';
 
 const ConceptualBlender: React.FC = () => {
@@ -11,8 +11,9 @@ const ConceptualBlender: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [result, setResult] = useState<BlendResult | null>(null);
-  const aiAttribution = useMemo<SourceAttribution>(() => ({ source: 'gemini', fetchedAt: new Date().toISOString() }), []);
-  const missingKey = !env.geminiApiKey;
+  const aiAttribution = useMemo<SourceAttribution>(() => ({ source: aiSourceTag, fetchedAt: new Date().toISOString() }), []);
+  const missingKey = !hasAiKey();
+  const providerKeyLabel = env.aiProvider === 'openai' ? 'VITE_OPENAI_API_KEY' : 'VITE_GEMINI_API_KEY';
 
   const handleBlend = async () => {
     setLoading(true);
@@ -56,7 +57,7 @@ const ConceptualBlender: React.FC = () => {
         {loading ? 'Blending...' : 'Blend Concepts'}
       </button>
 
-      {missingKey && <p className="text-xs text-amber-600">Provide <code className="font-mono">VITE_GEMINI_API_KEY</code> to blend new concepts.</p>}
+      {missingKey && <p className="text-xs text-amber-600">Provide <code className="font-mono">{providerKeyLabel}</code> to blend new concepts.</p>}
       {error && <div className="text-sm text-red-600 p-2 bg-red-50 rounded-md">{error}</div>}
 
       {result && (
