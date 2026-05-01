@@ -9,7 +9,8 @@ import { pushHistory } from './lib/history';
 import WordTree from './components/WordTree';
 import InfluenceMeter from './components/InfluenceMeter';
 import MorphologyPanel from './components/MorphologyPanel';
-import ConceptualBlender from './components/ConceptualBlender';
+import ConceptualBlender from "./components/ConceptualBlender";
+import DialecticTensionPanel from "./components/DialecticTensionPanel";
 import ThinkingModePanel from './components/ThinkingMode';
 import RecentSearches from './components/RecentSearches';
 import ExportPanel from './components/ExportPanel';
@@ -183,6 +184,7 @@ const App: React.FC = () => {
                     <InfluenceMeter bundle={bundle} />
                     <MorphologyPanel root={bundle} onPick={handlePick} />
                     <ThinkingModePanel bundle={bundle} />
+                    <DialecticTensionPanel bundle={bundle} />
                     <ConceptualBlender />
                   </div>
                 </div>

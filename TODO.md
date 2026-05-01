@@ -14,3 +14,4 @@ This document captures upcoming work items for the project. Each entry reference
 - [x] **Document AI prompt engineering guidelines** – Persona-specific guardrails captured in the [`README`](./README.md#persona-aware-prompt-playbook).
 - [x] **Adopt automated accessibility checks** – `jest-axe` accessibility assertions run within the Vitest pipeline.
 - [x] **Establish CI pipeline** – GitHub Actions workflow [`ci.yml`](./.github/workflows/ci.yml) enforces type safety, build integrity, and test coverage on each push.
+- [x] **Implement Epistemic Matrix (Dialectical Tension Map)** – Hold contradictions in superposition without collapsing them. Added `components/DialecticTensionPanel.tsx` and `services/dialectic.ts`. Documented in `DIALECTIC.md`.

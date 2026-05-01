@@ -64,3 +64,6 @@ Whenever a new prompt is introduced, document the persona alignment, safety chec
 1. Explore additional visualizations that highlight adapter telemetry trends over time.
 2. Expand IndexedDB history browsing with filtering and exporting workflows.
 3. Continue evolving persona-specific AI tooling with reusable prompt templates.
+
+## Dialectical Tension Map
+The application now includes an Epistemic Matrix to surface unresolvable dialectical tensions inherent in vocabulary. See `DIALECTIC.md` for the Hickam_Orientation and the philosophical stance preserving structural isomorphism against parsimonious flattening.
