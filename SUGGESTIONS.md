@@ -12,3 +12,5 @@ Below are ten targeted improvements designed to elevate robustness, usability, a
 8. **Persona-aware prompt library** – ✅ Prompt guardrails documented in [`README.md`](./README.md#persona-aware-prompt-playbook) with persona-specific design notes.
 9. **Automated accessibility regression checks** – ✅ `jest-axe` runs within Vitest to keep accessibility regressions from shipping.
 10. **Continuous integration pipeline** – ✅ CI workflow ensures tests and type checks run for every push (see `.github/workflows/ci.yml`).
+
+11. **Epistemic Escrow Integration** – Expanding the Dialectical Tension map to cross-reference historical evolution, preventing the premature debridement of symbolic scars.
