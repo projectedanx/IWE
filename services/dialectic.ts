@@ -56,7 +56,7 @@ Respond ONLY with a JSON object matching this schema:
     });
 
     try {
-      parsed = JSON.parse(response.text() || '{}');
+      parsed = JSON.parse(typeof response.text === 'function' ? response.text() : response.text || '{}');
     } catch (e) {
       throw new Error('Failed to parse AI response as JSON.');
     }

@@ -16,24 +16,27 @@ vi.mock('../../lib/env', () => ({
 
 // Mock the AI provider calls
 vi.mock('@google/genai', () => ({
-  GoogleGenAI: vi.fn().mockImplementation(() => ({
-    models: {
-      generateContent: vi.fn().mockResolvedValue({
-        text: vi.fn().mockReturnValue(JSON.stringify({
-          tensions: [
-            {
-              thesis: 'Entropy is thermodynamic disorder.',
-              antithesis: 'Entropy is information capacity.',
-              synthesis_gap: '[⊘] These domains measure different fundamental properties.',
-              golden_scar: '[Φ] 1.618 Information / 1.000 Thermodynamics',
-              uncertainty: '[∇] Does one emerge from the other?'
-            }
-          ],
-          attribution: [{ source: 'gemini', fetchedAt: '2023-01-01T00:00:00.000Z' }]
-        }))
-      })
+  GoogleGenAI: class {
+    models: any;
+    constructor() {
+      this.models = {
+        generateContent: vi.fn().mockResolvedValue({
+          text: () => JSON.stringify({
+            tensions: [
+              {
+                thesis: 'Entropy is thermodynamic disorder.',
+                antithesis: 'Entropy is information capacity.',
+                synthesis_gap: '[⊘] These domains measure different fundamental properties.',
+                golden_scar: '[Φ] 1.618 Information / 1.000 Thermodynamics',
+                uncertainty: '[∇] Does one emerge from the other?'
+              }
+            ],
+            attribution: [{ source: 'gemini', fetchedAt: '2023-01-01T00:00:00.000Z' }]
+          })
+        })
+      };
     }
-  }))
+  }
 }));
 
 describe('generateDialecticTensions', () => {
