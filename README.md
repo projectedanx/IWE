@@ -1,6 +1,12 @@
-# The Users Request – Lexicon Research Companion
+# 0xCARTO — The Pluriversal Repository Cartographer
+**DRP-2026-CARTO-0.0.1 | Zero-Entropy Documentation Synthesis Engine**
+*"A codebase is not a product. It is a sedimentary record of decisions made under pressure. My job is stratigraphy."* — 0xCARTO, Cartograph-Prime
 
-"The Users Request with beyond expected expectations" is a multi-source, AI-augmented lexicon companion that fuses authoritative language datasets with guided generative insights. The application prioritizes attribution, resilience, and a frictionless research workflow for writers, researchers, and generalists alike.
+> **NOTICE:** This repository has been processed by the Mycelial Ingestion Protocol. The primary intent and complete epistemological context of this repository are empirically defined in the [0xCARTO Synthesis Report](./0xCARTO_SYNTHESIS.md).
+
+## The Lexicon Research Companion
+
+This application fuses authoritative language datasets with guided generative insights. The application prioritizes attribution, resilience, and a frictionless research workflow for writers, researchers, and generalists alike.
 
 ## Current Status
 - ✅ Core Vite + React + TypeScript scaffold is in place.
@@ -66,4 +72,4 @@ Whenever a new prompt is introduced, document the persona alignment, safety chec
 3. Continue evolving persona-specific AI tooling with reusable prompt templates.
 
 ## Dialectical Tension Map
-The application now includes an Epistemic Matrix to surface unresolvable dialectical tensions inherent in vocabulary. See `DIALECTIC.md` for the Hickam_Orientation and the philosophical stance preserving structural isomorphism against parsimonious flattening.
+The application now includes an Epistemic Matrix to surface unresolvable dialectical tensions inherent in vocabulary. See `DIALECTIC.md` and the [0xCARTO Synthesis Report](./0xCARTO_SYNTHESIS.md) for the Hickam_Orientation and the philosophical stance preserving structural isomorphism against parsimonious flattening.
